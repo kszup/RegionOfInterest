@@ -1,9 +1,11 @@
 package iris.regionofinterest;
 
+
 import java.io.IOException;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.pm.ActivityInfo;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -19,6 +21,7 @@ import android.view.View;
 import android.view.ViewGroup.LayoutParams;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.Toast;
 
 public class RegionOfInterestActivity extends Activity {
     /** Called when the activity is first created. */
@@ -31,15 +34,15 @@ public class RegionOfInterestActivity extends Activity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        
+        this.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
-        requestWindowFeature(Window.FEATURE_NO_TITLE);        
+        requestWindowFeature(Window.FEATURE_NO_TITLE);
         
         mDrawOnTop = new DrawOnTop(this);
         mPreview = new Preview(this, mDrawOnTop);
         setContentView(mPreview);
         addContentView(mDrawOnTop, new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));        
-        Log.d(TAG, "ROI - onCreate");  	
+
     }
     @Override
     public boolean onTouchEvent(MotionEvent event) {
@@ -48,15 +51,15 @@ public class RegionOfInterestActivity extends Activity {
     	case (MotionEvent.ACTION_DOWN): {
     		//DrawOnTop.xpos = (int)event.getX();
     		//DrawOnTop.ypos = (int)event.getY();
-    		Log.d(TAG, "ACTION_DOWN: "+DrawOnTop.xpos+","+DrawOnTop.ypos);
+    		//Log.d(TAG, "ACTION_DOWN: "+DrawOnTop.xpos+","+DrawOnTop.ypos);
     	}
     		break;
     	case (MotionEvent.ACTION_UP): {
-    		//DrawOnTop.xpos = (int)event.getX();
-    		//DrawOnTop.ypos = (int)event.getY();
+    		DrawOnTop.xpos = (int)event.getX();
+    		DrawOnTop.ypos = (int)event.getY();
     		Log.d(TAG, "ACTION_UP: "+DrawOnTop.xpos+","+DrawOnTop.ypos);
-    		
     		//TODO: On ACTION_UP get coordinates, take picture, capture tile and output to screen. 
+    		Toast.makeText(this, "ACTION_UP: "+DrawOnTop.xpos+","+DrawOnTop.ypos, Toast.LENGTH_SHORT).show();
     	}
     		break;
     	case (MotionEvent.ACTION_MOVE):{
@@ -137,14 +140,13 @@ class Preview extends SurfaceView implements SurfaceHolder.Callback {
 		mHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
 	}
 	public void surfaceCreated(SurfaceHolder holder) {
-		mCamera = mCamera.open();
+		mCamera = Camera.open();
 		try {
 			mCamera.setPreviewDisplay(holder);
 			mCamera.setPreviewCallback(new PreviewCallback() {
 				public void onPreviewFrame(byte[] data, Camera camera) {
 					if(mFinished)
 						return;
-					Camera.Parameters params = camera.getParameters();
 					mDrawOnTop.invalidate();
 				}
 			});
@@ -159,19 +161,16 @@ class Preview extends SurfaceView implements SurfaceHolder.Callback {
 		mCamera.stopPreview();
 		mCamera.release();
 		mCamera = null;
+		//Toast.makeText(this, "Camera released", Toast.LENGTH_SHORT).show();
 	}
 	public void surfaceChanged(SurfaceHolder holder, int format, int w, int h) {
 		Camera.Parameters parameters = mCamera.getParameters();
-		
-		//parameters.setFocusMode(Camera.Parameters.FOCUS_MODE_INFINITY);
 		
 		parameters.setFocusMode(Camera.Parameters.FOCUS_MODE_MACRO);
 		
 		parameters.setAntibanding(Camera.Parameters.ANTIBANDING_OFF);
 		
 		parameters.setColorEffect(Camera.Parameters.EFFECT_MONO);
-		
-		//parameters.setExposureCompensation(4);
 		
 		mCamera.setParameters(parameters);
 		mCamera.startPreview();		
