@@ -1,10 +1,10 @@
 package iris.regionofinterest;
 
-
 import java.io.IOException;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -18,9 +18,11 @@ import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
+import android.view.View.OnTouchListener;
 import android.view.ViewGroup.LayoutParams;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.LinearLayout;
 import android.widget.Toast;
 
 public class RegionOfInterestActivity extends Activity {
@@ -41,7 +43,7 @@ public class RegionOfInterestActivity extends Activity {
         mDrawOnTop = new DrawOnTop(this);
         mPreview = new Preview(this, mDrawOnTop);
         setContentView(mPreview);
-        addContentView(mDrawOnTop, new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));        
+        addContentView(mDrawOnTop, new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));   
 
     }
     @Override
@@ -60,6 +62,8 @@ public class RegionOfInterestActivity extends Activity {
     		Log.d(TAG, "ACTION_UP: "+DrawOnTop.xpos+","+DrawOnTop.ypos);
     		//TODO: On ACTION_UP get coordinates, take picture, capture tile and output to screen. 
     		Toast.makeText(this, "ACTION_UP: "+DrawOnTop.xpos+","+DrawOnTop.ypos, Toast.LENGTH_SHORT).show();
+    		Intent intent = new Intent(RegionOfInterestActivity.this, TileDisplayActivity.class);
+    		startActivity(intent);
     	}
     		break;
     	case (MotionEvent.ACTION_MOVE):{
