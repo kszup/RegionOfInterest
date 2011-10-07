@@ -51,8 +51,8 @@ public class RegionOfInterestActivity extends Activity {
     	int action = event.getAction();
     	switch(action) {
     	case (MotionEvent.ACTION_DOWN): {
-    		//DrawOnTop.xpos = (int)event.getX();
-    		//DrawOnTop.ypos = (int)event.getY();
+    		DrawOnTop.xpos = (int)event.getX();
+    		DrawOnTop.ypos = (int)event.getY();
     		//Log.d(TAG, "ACTION_DOWN: "+DrawOnTop.xpos+","+DrawOnTop.ypos);
     	}
     		break;
@@ -62,8 +62,9 @@ public class RegionOfInterestActivity extends Activity {
     		Log.d(TAG, "ACTION_UP: "+DrawOnTop.xpos+","+DrawOnTop.ypos);
     		//TODO: On ACTION_UP get coordinates, take picture, capture tile and output to screen. 
     		Toast.makeText(this, "ACTION_UP: "+DrawOnTop.xpos+","+DrawOnTop.ypos, Toast.LENGTH_SHORT).show();
-    		Intent intent = new Intent(RegionOfInterestActivity.this, TileDisplayActivity.class);
-    		startActivity(intent);
+    		Intent TileDisplay = new Intent(RegionOfInterestActivity.this, TileDisplayActivity.class);
+    		startActivity(TileDisplay);
+    		//finish();
     	}
     		break;
     	case (MotionEvent.ACTION_MOVE):{
