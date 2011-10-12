@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="hello">You are in TileDisplayActivity!</string>
     <string name="app_name">RegionOfInterest</string>
+    <string name="tile_display_hello">You are in TileDisplayActivity!</string>
+    <string name="list_files">Select a File</string>
 </resources>

@@ -60,7 +60,8 @@ public class RegionOfInterestActivity extends Activity implements SurfaceHolder.
         mSurfaceHolder.addCallback(this);
         mSurfaceHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS); // Surface doesn't own buffer (speed improvement)
         
-        addContentView(mDrawOnTop, new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));   
+        addContentView(mDrawOnTop, new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));  
+
     }
 	@Override
     public boolean onTouchEvent(MotionEvent event) {
@@ -110,6 +111,12 @@ public class RegionOfInterestActivity extends Activity implements SurfaceHolder.
     			tempdata = data;
     			imgCapture();
     			Intent TileDisplay = new Intent(RegionOfInterestActivity.this, TileDisplayActivity.class);
+    	        Bundle b = new Bundle();
+				b.putInt("startX", mDrawOnTop.startX);
+    	        b.putInt("startY", mDrawOnTop.startY);
+    	        b.putInt("width", mDrawOnTop.xWidth);
+    	        b.putInt("height", mDrawOnTop.yHeight);
+    	        TileDisplay.putExtras(b);
     			startActivity(TileDisplay);
     		}
     	}
@@ -181,6 +188,8 @@ class DrawOnTop extends View {
 	static int ypos;
 	int xWidth;
 	int yHeight;
+	int startX=0;
+	int startY=0;
 	
 	public DrawOnTop(Context context) {
 		super(context);
@@ -217,62 +226,11 @@ class DrawOnTop extends View {
 						canvas.drawLine(xWidth*i, yHeight*j, xWidth*i, (yHeight*j)+yHeight, mPaintRed);
 						canvas.drawLine((xWidth*i)+xWidth, (yHeight*j)+yHeight, xWidth*i, (yHeight*j)+yHeight, mPaintRed);
 						canvas.drawLine((xWidth*i)+xWidth, (yHeight*j)+yHeight, (xWidth*i)+xWidth, yHeight*j, mPaintRed);
+						startX = xWidth*i;
+						startY = yHeight*j;
 					}
 				}
 			}
 		}
 	}
 }
-/*
-class Preview extends SurfaceView implements SurfaceHolder.Callback {
-	SurfaceHolder mHolder;
-	Camera mCamera;
-	DrawOnTop mDrawOnTop;
-	boolean mFinished;
-	
-	Preview(Context context, DrawOnTop drawOnTop) {
-		super(context);
-		
-		mDrawOnTop = drawOnTop;
-		mFinished = false;
-		mHolder = getHolder(); // WHAT IS THIS?
-		mHolder.addCallback(this);
-		mHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
-	}
-	public void surfaceCreated(SurfaceHolder holder) {
-		mCamera = Camera.open();
-		try {
-			mCamera.setPreviewDisplay(holder);
-			mCamera.setPreviewCallback(new PreviewCallback() {
-				public void onPreviewFrame(byte[] data, Camera camera) {
-					if(mFinished)
-						return;
-					mDrawOnTop.invalidate();
-				}
-			});
-		} catch (IOException exception) {
-			mCamera.release();
-			mCamera = null;
-		}
-	}
-	public void surfaceDestroyed(SurfaceHolder holder) {
-		mFinished = true;
-		mCamera.setPreviewCallback(null);
-		mCamera.stopPreview();
-		mCamera.release();
-		mCamera = null;
-		Toast.makeText(getContext(), "Camera Released", Toast.LENGTH_SHORT).show();
-	}
-	public void surfaceChanged(SurfaceHolder holder, int format, int w, int h) {
-		Camera.Parameters parameters = mCamera.getParameters();
-		
-		parameters.setFocusMode(Camera.Parameters.FOCUS_MODE_MACRO);
-		
-		parameters.setAntibanding(Camera.Parameters.ANTIBANDING_OFF);
-		
-		parameters.setColorEffect(Camera.Parameters.EFFECT_MONO);
-		
-		mCamera.setParameters(parameters);
-		mCamera.startPreview();		
-	}
-}*/
