@@ -20,8 +20,16 @@ import android.widget.Toast;
 public class TileDisplayActivity extends Activity {
 	private static final String TAG = "iris";
 	static final String IrisPATH = "/DCIM/Iris/";
-	ImageView tile;
 	
+	ImageView tile;
+	int mStartX;
+	int mStartY;
+	int mWidth;
+	int mHeight;
+	int mYdiv;
+	int mXdiv;
+	Bitmap bm;
+	Bitmap newbm;
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -38,32 +46,52 @@ public class TileDisplayActivity extends Activity {
 		i.putExtra("directory", ImageDir);
 		startActivityForResult(i,0);		
 		
-	}
-	@Override
-	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-		// Get specific image Path and display
-		Bundle b= getIntent().getExtras();
+		Bundle b = getIntent().getExtras();
 		final int startX = b.getInt("startX");
 		final int startY = b.getInt("startY");
 		final int width = b.getInt("width");
 		final int height = b.getInt("height");
-		Log.d(TAG,"Bundled Values: startX-"+startX+", startY-"+startY+", width-"+width+", height-"+height);
+		final int yDiv = b.getInt("yDiv");
+		final int xDiv = b.getInt("xDiv");
+		
+		Log.d(TAG,"Bundled Values in onCreate: Tile Number: "+startX+","+startY+", width-"+width+", height-"+height+" Divs: "+xDiv+","+yDiv);
+		mStartX = startX;
+		mStartY = startY;
+		mWidth = width;
+		mHeight = height;
+		mYdiv = yDiv;
+		mXdiv = xDiv;
+	}
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		// Get specific image Path and display
+		/*
+		int startX = 0;
+		int startY = 0;
+		int width = 480;
+		int height = 320;
+		*/	
+		Log.d(TAG,"Bundled Values: mStartX-"+mStartX+", mStartY-"+mStartY+", width-"+mWidth+", height-"+mHeight);
 		
 		super.onActivityResult(requestCode, resultCode, data);
 		if(requestCode == 0 && resultCode == RESULT_OK) {
 			
 			String tmp = data.getExtras().getString("selectedFile");
 			BitmapFactory.Options options = new BitmapFactory.Options();
-			options.inPreferredConfig = Bitmap.Config.ARGB_8888;
-			options.inSampleSize=2;
-			Bitmap bm = BitmapFactory.decodeFile(tmp,options);
-			Bitmap newbm = Bitmap.createBitmap(bm,startX,startY,width,height,null,false);
+			//options.inPreferredConfig = Bitmap.Config.ARGB_8888;
+			//options.inSampleSize=2;
+			//Bitmap bm = BitmapFactory.decodeFile(tmp,options);
+			bm = BitmapFactory.decodeFile(tmp,options);
+			//Bitmap newbm = Bitmap.createBitmap(bm,mStartX,mStartY,mWidth,mHeight,null,false);
+			mWidth = bm.getWidth()/mXdiv;
+			mHeight = bm.getHeight()/mYdiv;
+			mStartX = mStartX*mWidth;
+			mStartY = mStartY*mHeight;
+			Log.d(TAG,"[m Values] mStartX: "+mStartX+" mStartY: "+mStartY+" mWidth: "+mWidth+" mHeight: "+mHeight);
+			newbm = Bitmap.createBitmap(bm,mStartX,mStartY,mWidth,mHeight,null,false);
 			tile.setImageBitmap(newbm);
-			Log.d(TAG,"setImageBitmap"+bm.getWidth()+"x"+bm.getHeight());
-			//processImg(selectedImg);
+			//bm.recycle();
+			Log.d(TAG,"setImageBitmap"+newbm.getWidth()+"x"+newbm.getHeight());
 		}
-	}
-	void processImg(Bitmap image) {
-
 	}
 }

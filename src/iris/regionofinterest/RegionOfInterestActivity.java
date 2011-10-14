@@ -116,6 +116,8 @@ public class RegionOfInterestActivity extends Activity implements SurfaceHolder.
     	        b.putInt("startY", mDrawOnTop.startY);
     	        b.putInt("width", mDrawOnTop.xWidth);
     	        b.putInt("height", mDrawOnTop.yHeight);
+    	        b.putInt("xDiv", mDrawOnTop.xDiv);
+    	        b.putInt("yDiv", mDrawOnTop.yDiv);
     	        TileDisplay.putExtras(b);
     			startActivity(TileDisplay);
     		}
@@ -167,7 +169,7 @@ public class RegionOfInterestActivity extends Activity implements SurfaceHolder.
 				mPreviewRunning = false;
 			}
 			Camera.Parameters parameters = mCamera.getParameters();
-			parameters.setFocusMode(Camera.Parameters.FOCUS_MODE_MACRO);
+			parameters.setFocusMode(Camera.Parameters.FOCUS_MODE_AUTO);
 			parameters.setAntibanding(Camera.Parameters.ANTIBANDING_OFF);
 			parameters.setColorEffect(Camera.Parameters.EFFECT_MONO);
 			mCamera.setParameters(parameters);
@@ -190,6 +192,8 @@ class DrawOnTop extends View {
 	int yHeight;
 	int startX=0;
 	int startY=0;
+	int xDiv = 6;
+	int yDiv = 5;
 	
 	public DrawOnTop(Context context) {
 		super(context);
@@ -208,29 +212,35 @@ class DrawOnTop extends View {
 	protected void onDraw(Canvas canvas) {
 		int canvasWidth = canvas.getWidth();
 		int canvasHeight = canvas.getHeight();
-		
-		xWidth = canvasWidth/4;
-		yHeight = canvasHeight/4;
-		for (int i = 0; i < 4; i++) {
+		xWidth = canvasWidth/xDiv;
+		yHeight = canvasHeight/yDiv;
+		for (int i = 0; i < xDiv-1; i++) {
 			canvas.drawLine(xWidth+(xWidth*i), 0, xWidth+(xWidth*i), canvasHeight, mPaintYellow);
+		}
+		for (int i = 0; i < yDiv-1; i++) {
 			canvas.drawLine(0,yHeight+(yHeight*i),canvasWidth,yHeight+(yHeight*i),mPaintYellow);
 		}
 		String position = "(x,y) position of touch: ("+ xpos + "," + ypos +")";
 		canvas.drawText(position, 25, 25, mPaintRed);
 		
-		for (int i = 0; i < 5; i++) {
-			for (int j = 0; j < 5; j++) {
+		for (int i = 0; i < xDiv+1; i++) {
+			for (int j = 0; j < yDiv+1; j++) {
 				if (xpos > (xWidth*i) && xpos < (xWidth+(xWidth*i))) {
 					if (ypos > (yHeight*j) && ypos < (yHeight+(yHeight*j))) {
 						canvas.drawLine(xWidth*i, yHeight*j, (xWidth*i)+xWidth, (yHeight*j), mPaintRed);
 						canvas.drawLine(xWidth*i, yHeight*j, xWidth*i, (yHeight*j)+yHeight, mPaintRed);
 						canvas.drawLine((xWidth*i)+xWidth, (yHeight*j)+yHeight, xWidth*i, (yHeight*j)+yHeight, mPaintRed);
 						canvas.drawLine((xWidth*i)+xWidth, (yHeight*j)+yHeight, (xWidth*i)+xWidth, yHeight*j, mPaintRed);
-						startX = xWidth*i;
-						startY = yHeight*j;
+						//startX = xWidth*i;
+						//startY = yHeight*j;
+						startX = i;//xWidth*i;
+						startY = j;//yHeight*j;
 					}
 				}
 			}
 		}
+		
+		String tile = "Tile start point: "+startX+","+startY+" Tile size: "+xWidth+","+yHeight;
+		canvas.drawText(tile, 25, 50, mPaintRed);
 	}
 }
