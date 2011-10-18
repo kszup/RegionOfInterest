@@ -180,6 +180,7 @@ public class RegionOfInterestActivity extends Activity implements SurfaceHolder.
 			Log.e(TAG,e.toString());
 		}
 	}
+
 }
 
 class DrawOnTop extends View {

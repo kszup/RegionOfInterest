@@ -60,17 +60,12 @@ public class TileDisplayActivity extends Activity {
 		mWidth = width;
 		mHeight = height;
 		mYdiv = yDiv;
-		mXdiv = xDiv;
+		mXdiv = xDiv;		
+		
 	}
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-		// Get specific image Path and display
-		/*
-		int startX = 0;
-		int startY = 0;
-		int width = 480;
-		int height = 320;
-		*/	
+		// Get specific image Path and display	
 		Log.d(TAG,"Bundled Values: mStartX-"+mStartX+", mStartY-"+mStartY+", width-"+mWidth+", height-"+mHeight);
 		
 		super.onActivityResult(requestCode, resultCode, data);
@@ -80,9 +75,7 @@ public class TileDisplayActivity extends Activity {
 			BitmapFactory.Options options = new BitmapFactory.Options();
 			//options.inPreferredConfig = Bitmap.Config.ARGB_8888;
 			//options.inSampleSize=2;
-			//Bitmap bm = BitmapFactory.decodeFile(tmp,options);
 			bm = BitmapFactory.decodeFile(tmp,options);
-			//Bitmap newbm = Bitmap.createBitmap(bm,mStartX,mStartY,mWidth,mHeight,null,false);
 			mWidth = bm.getWidth()/mXdiv;
 			mHeight = bm.getHeight()/mYdiv;
 			mStartX = mStartX*mWidth;
@@ -90,8 +83,14 @@ public class TileDisplayActivity extends Activity {
 			Log.d(TAG,"[m Values] mStartX: "+mStartX+" mStartY: "+mStartY+" mWidth: "+mWidth+" mHeight: "+mHeight);
 			newbm = Bitmap.createBitmap(bm,mStartX,mStartY,mWidth,mHeight,null,false);
 			tile.setImageBitmap(newbm);
-			//bm.recycle();
-			Log.d(TAG,"setImageBitmap"+newbm.getWidth()+"x"+newbm.getHeight());
+			Log.d(TAG,"setImageBitmap: "+newbm.getWidth()+"x"+newbm.getHeight());
 		}
+	}
+	@Override
+	protected void onDestroy() {
+		// Clean up
+		super.onDestroy();
+		bm.recycle();
+		newbm.recycle();
 	}
 }
