@@ -34,14 +34,20 @@ public class RegionOfInterestActivity extends Activity implements SurfaceHolder.
 	private static final String TAG = "iris";
 	
 	private DrawOnTop mDrawOnTop;
-	int x;
-	int y;
-
+	
 	Camera mCamera;
-	byte[] tempdata;
 	boolean mPreviewRunning = false;
 	private SurfaceHolder mSurfaceHolder;
 	private SurfaceView mSurfaceView;
+	
+	long fileName;
+	Bitmap mBitmap;
+	Bitmap newbm;
+	
+	int mWidth;
+	int mHeight;
+	int mStartX;
+	int mStartY;
 	
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -61,7 +67,6 @@ public class RegionOfInterestActivity extends Activity implements SurfaceHolder.
         mSurfaceHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS); // Surface doesn't own buffer (speed improvement)
         
         addContentView(mDrawOnTop, new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));  
-
     }
 	@Override
     public boolean onTouchEvent(MotionEvent event) {
@@ -71,30 +76,29 @@ public class RegionOfInterestActivity extends Activity implements SurfaceHolder.
     		DrawOnTop.xpos = (int)event.getX();
     		DrawOnTop.ypos = (int)event.getY();
     		Log.d(TAG, "ACTION_DOWN: "+DrawOnTop.xpos+","+DrawOnTop.ypos);
-    	}
     		break;
+    		}
     	case (MotionEvent.ACTION_UP): {
     		DrawOnTop.xpos = (int)event.getX();
     		DrawOnTop.ypos = (int)event.getY();
     		Log.d(TAG, "ACTION_UP: "+DrawOnTop.xpos+","+DrawOnTop.ypos);
-    		Toast.makeText(this, "ACTION_UP: "+DrawOnTop.xpos+","+DrawOnTop.ypos, Toast.LENGTH_SHORT).show();
     		
-    		mCamera.takePicture(mShutterCallback, mPictureCallback, mJpeg);
-    	}
+    		Toast.makeText(this, "Cropping and Saving. Please wait... "+DrawOnTop.xpos+","+DrawOnTop.ypos, Toast.LENGTH_SHORT).show();
+    		captureImage();
     		break;
+    		}
     	case (MotionEvent.ACTION_MOVE):{
     		DrawOnTop.xpos = (int)event.getX();
     		DrawOnTop.ypos = (int)event.getY();
     		//Log.d(TAG, "ACTION_MOVE: "+DrawOnTop.xpos+","+DrawOnTop.ypos);
-    	}
     		break;
+    		}
     	}
 		return super.onTouchEvent(event);
     }
-    public void captureImage(Camera mCamera) {
-    	mCamera.takePicture(mShutterCallback, mPictureCallback, mJpeg);
-    	Log.d(TAG, "mCamera.takePicture");
-    	
+    public void captureImage() {
+    	mCamera.takePicture(mShutterCallback, mPictureCallback, mPNG);
+    	Log.d(TAG, "mCamera.takePicture");   	
     }
     ShutterCallback mShutterCallback = new ShutterCallback() { // Do something when picture is taken (noise)
     	//@Override
@@ -105,37 +109,48 @@ public class RegionOfInterestActivity extends Activity implements SurfaceHolder.
     		Log.d(TAG, "onPictureTaken - raw"); 
     	}
     };
-    PictureCallback mJpeg = new PictureCallback() {
+    PictureCallback mPNG = new PictureCallback() {
     	public void onPictureTaken(byte[] data, Camera c) { // For compressed picture data
     		if(data !=null) {
-    			tempdata = data;
-    			imgCapture();
-    			Intent TileDisplay = new Intent(RegionOfInterestActivity.this, TileDisplayActivity.class);
-    	        Bundle b = new Bundle();
-				b.putInt("startX", mDrawOnTop.startX);
-    	        b.putInt("startY", mDrawOnTop.startY);
-    	        b.putInt("width", mDrawOnTop.xWidth);
-    	        b.putInt("height", mDrawOnTop.yHeight);
-    	        b.putInt("xDiv", mDrawOnTop.xDiv);
-    	        b.putInt("yDiv", mDrawOnTop.yDiv);
-    	        TileDisplay.putExtras(b);
-    			startActivity(TileDisplay);
+    			imgCapture(data);
+    			tileDisplay();
+    			data = null;
+    		} else {
+    			Log.e(TAG, "mPNG: no data!");
     		}
+    		Log.d(TAG, "onPictureTaken - mPNG");     		
     	}
     };
-    void imgCapture() {
+    void tileDisplay() { 
+    // Start tileDisplayActivity
+    	Intent tileDisplay = new Intent(RegionOfInterestActivity.this, TileDisplayActivity.class);
+    	Bundle b = new Bundle();
+    	b.putLong("fileName", fileName);
+        tileDisplay.putExtras(b);
+		startActivity(tileDisplay);
+    }
+    void imgCapture(byte[] data) {
+    // Saving only cropped image to sdcard
     	FileOutputStream outStream = null;
+    	fileName = System.currentTimeMillis();
     	try {
-    		outStream = new FileOutputStream(String.format("/sdcard/DCIM/Iris/%d.jpg", System.currentTimeMillis()));
+    		outStream = new FileOutputStream(String.format("/sdcard/DCIM/Iris/%d.png", fileName));
     	} catch (FileNotFoundException e) {
+    		Log.e(TAG,"caught FileNotFoundException");
     		e.printStackTrace();
     	}
-    	Bitmap mBitmap = BitmapFactory.decodeByteArray(tempdata, 0, tempdata.length);
-    	mBitmap.compress(Bitmap.CompressFormat.JPEG, 100, outStream);
+    	mBitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
+    	mWidth = mBitmap.getWidth()/mDrawOnTop.xDiv;
+    	mHeight = mBitmap.getHeight()/mDrawOnTop.yDiv;
+    	mStartX = mWidth*mDrawOnTop.startX;
+    	mStartY = mHeight*mDrawOnTop.startY;
+    	newbm = Bitmap.createBitmap(mBitmap,mStartX,mStartY,mWidth,mHeight,null,false);
+    	newbm.compress(Bitmap.CompressFormat.PNG, 100, outStream);
     	mBitmap.recycle();
+    	data = null;
     }
 	public void surfaceCreated(SurfaceHolder holder) {
-		Log.e(TAG, "surfaceCreated");
+		Log.d(TAG, "surfaceCreated");
 		try {		
 			mCamera = Camera.open();
 			mCamera.setPreviewDisplay(holder);
@@ -147,6 +162,7 @@ public class RegionOfInterestActivity extends Activity implements SurfaceHolder.
 		} catch (IOException e) {
 			mCamera.release();
 			mCamera = null;
+			Log.e(TAG,"caught IOException");
 			Log.e(TAG,e.toString());
 		}
 	}
@@ -177,22 +193,37 @@ public class RegionOfInterestActivity extends Activity implements SurfaceHolder.
 			mCamera.startPreview();
 			mPreviewRunning = true;
 		} catch(Exception e) {
+			Log.e(TAG,"caught stopPreview exception");
 			Log.e(TAG,e.toString());
 		}
 	}
-
+	public void onRestart() {
+		super.onRestart();
+		Log.d(TAG,"mBitmap: "+mBitmap); // Should give null
+		Toast.makeText(this, "onRestart", Toast.LENGTH_SHORT).show();
+	}
+	public void onPause() {
+		super.onPause();
+		if(mBitmap != null) {
+			mBitmap.recycle();
+			mBitmap = null;
+		}
+		Toast.makeText(this,"onPause in RegionOfInterest", Toast.LENGTH_SHORT).show();
+	}
 }
 
-class DrawOnTop extends View {
-	Bitmap mBitmap;
+class DrawOnTop extends View { 
+// Drawing grid and marking selected tile
 	static Paint mPaintRed;
 	Paint mPaintYellow;
 	static int xpos;
 	static int ypos;
 	int xWidth;
 	int yHeight;
-	int startX=0;
-	int startY=0;
+	int startX = 0;
+	int startY = 0;
+
+	//Grid is 6x5
 	int xDiv = 6;
 	int yDiv = 5;
 	
@@ -206,8 +237,6 @@ class DrawOnTop extends View {
 		mPaintRed.setStyle(Paint.Style.FILL);
 		mPaintRed.setColor(Color.RED);
 		mPaintRed.setTextSize(25);
-		
-		mBitmap = null;
 	}
 	@Override
 	protected void onDraw(Canvas canvas) {
@@ -232,16 +261,14 @@ class DrawOnTop extends View {
 						canvas.drawLine(xWidth*i, yHeight*j, xWidth*i, (yHeight*j)+yHeight, mPaintRed);
 						canvas.drawLine((xWidth*i)+xWidth, (yHeight*j)+yHeight, xWidth*i, (yHeight*j)+yHeight, mPaintRed);
 						canvas.drawLine((xWidth*i)+xWidth, (yHeight*j)+yHeight, (xWidth*i)+xWidth, yHeight*j, mPaintRed);
-						//startX = xWidth*i;
-						//startY = yHeight*j;
-						startX = i;//xWidth*i;
-						startY = j;//yHeight*j;
+						startX = i;
+						startY = j;
 					}
 				}
 			}
 		}
 		
-		String tile = "Tile start point: "+startX+","+startY+" Tile size: "+xWidth+","+yHeight;
+		String tile = "Tile Number (start point): "+startX+","+startY+" Tile size: "+xWidth+","+yHeight;
 		canvas.drawText(tile, 25, 50, mPaintRed);
 	}
 }
