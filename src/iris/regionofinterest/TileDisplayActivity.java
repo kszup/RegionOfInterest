@@ -14,6 +14,7 @@ public class TileDisplayActivity extends Activity {
 	static final String IrisPATH = "/DCIM/Iris/";
 	
 	// For WebView
+	//static WebView mWebView;
 	WebView mWebView;
 		
 	@Override
@@ -37,7 +38,8 @@ public class TileDisplayActivity extends Activity {
 	protected void onDestroy() {
 		// Clean up
 		super.onDestroy();
+		mWebView.destroy();
 		Log.d(TAG, "onDestroy in tileDisplayActivity");
-		Toast.makeText(this,"onDestroy in tileDisplayActivity", Toast.LENGTH_SHORT).show();
+		//Toast.makeText(this,"onDestroy in tileDisplayActivity", Toast.LENGTH_SHORT).show();
 	}
 }

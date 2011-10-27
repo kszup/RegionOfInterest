@@ -53,6 +53,7 @@ public class RegionOfInterestActivity extends Activity implements SurfaceHolder.
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         
+        // Layout setup
         this.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         getWindow().setFormat(PixelFormat.TRANSLUCENT);
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
@@ -70,6 +71,7 @@ public class RegionOfInterestActivity extends Activity implements SurfaceHolder.
     }
 	@Override
     public boolean onTouchEvent(MotionEvent event) {
+	// Executing captureImage on ACTION_UP event.
     	int action = event.getAction();
     	switch(action) {
     	case (MotionEvent.ACTION_DOWN): {
@@ -84,6 +86,11 @@ public class RegionOfInterestActivity extends Activity implements SurfaceHolder.
     		Log.d(TAG, "ACTION_UP: "+DrawOnTop.xpos+","+DrawOnTop.ypos);
     		
     		Toast.makeText(this, "Cropping and Saving. Please wait... "+DrawOnTop.xpos+","+DrawOnTop.ypos, Toast.LENGTH_SHORT).show();
+    		try {
+    			Thread.sleep(10);
+    		} catch (InterruptedException e){
+    			e.printStackTrace();
+    		}
     		captureImage();
     		break;
     		}
@@ -97,7 +104,9 @@ public class RegionOfInterestActivity extends Activity implements SurfaceHolder.
 		return super.onTouchEvent(event);
     }
     public void captureImage() {
-    	mCamera.takePicture(mShutterCallback, mPictureCallback, mPNG);
+    // Take Picture also suggest garbage collection
+    	System.gc();
+    	mCamera.takePicture(null, null, mPNG);
     	Log.d(TAG, "mCamera.takePicture");   	
     }
     ShutterCallback mShutterCallback = new ShutterCallback() { // Do something when picture is taken (noise)
@@ -122,7 +131,7 @@ public class RegionOfInterestActivity extends Activity implements SurfaceHolder.
     	}
     };
     void tileDisplay() { 
-    // Start tileDisplayActivity
+    // Start tileDisplayActivity and pass fileName to it
     	Intent tileDisplay = new Intent(RegionOfInterestActivity.this, TileDisplayActivity.class);
     	Bundle b = new Bundle();
     	b.putLong("fileName", fileName);
@@ -200,7 +209,7 @@ public class RegionOfInterestActivity extends Activity implements SurfaceHolder.
 	public void onRestart() {
 		super.onRestart();
 		Log.d(TAG,"mBitmap: "+mBitmap); // Should give null
-		Toast.makeText(this, "onRestart", Toast.LENGTH_SHORT).show();
+		//Toast.makeText(this, "onRestart", Toast.LENGTH_SHORT).show();
 	}
 	public void onPause() {
 		super.onPause();
@@ -208,7 +217,11 @@ public class RegionOfInterestActivity extends Activity implements SurfaceHolder.
 			mBitmap.recycle();
 			mBitmap = null;
 		}
-		Toast.makeText(this,"onPause in RegionOfInterest", Toast.LENGTH_SHORT).show();
+		//Toast.makeText(this,"onPause in RegionOfInterest", Toast.LENGTH_SHORT).show();
+	}
+	public void onDestroy() {
+		super.onDestroy();
+		System.gc();
 	}
 }
 
